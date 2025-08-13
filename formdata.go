@@ -1,4 +1,4 @@
-// Package formdata a demo plugin.
+// Package formdata implements a plugin to mutate request form data.
 package formdata
 
 import (
@@ -30,8 +30,8 @@ func CreateConfig() *Config {
 	}
 }
 
-// Demo represents the formdata plugin.
-type Demo struct {
+// Formdata represents the formdata plugin.
+type Formdata struct {
 	next     http.Handler
 	set      map[string]string
 	appendTo map[string]string
@@ -39,13 +39,13 @@ type Demo struct {
 	name     string
 }
 
-// New created a new Demo plugin.
+// New created a new Formdata plugin.
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	if len(config.Set) == 0 && len(config.Append) == 0 && len(config.Delete) == 0 {
 		return nil, fmt.Errorf("at least one of set, append, or delete must be provided")
 	}
 
-	return &Demo{
+	return &Formdata{
 		set:      config.Set,
 		appendTo: config.Append,
 		delete:   config.Delete,
@@ -54,7 +54,7 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 	}, nil
 }
 
-func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (a *Formdata) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ct := req.Header.Get("Content-Type")
 	switch {
 	case strings.HasPrefix(ct, "application/x-www-form-urlencoded"):
@@ -66,7 +66,7 @@ func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 // handleURLEncoded mutates application/x-www-form-urlencoded request bodies in-place.
-func (a *Demo) handleURLEncoded(rw http.ResponseWriter, req *http.Request) {
+func (a *Formdata) handleURLEncoded(rw http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
@@ -91,7 +91,7 @@ func (a *Demo) handleURLEncoded(rw http.ResponseWriter, req *http.Request) {
 }
 
 // handleMultipart mutates multipart/form-data request bodies while preserving file parts.
-func (a *Demo) handleMultipart(rw http.ResponseWriter, req *http.Request) {
+func (a *Formdata) handleMultipart(rw http.ResponseWriter, req *http.Request) {
 	if err := req.ParseMultipartForm(32 << 20); err != nil { // 32MB memory threshold
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
@@ -128,7 +128,7 @@ func (a *Demo) handleMultipart(rw http.ResponseWriter, req *http.Request) {
 }
 
 // applyOpsToValues applies delete, set, and append operations to the given values map.
-func (a *Demo) applyOpsToValues(values map[string][]string) {
+func (a *Formdata) applyOpsToValues(values map[string][]string) {
 	for _, k := range a.delete {
 		delete(values, k)
 	}
