@@ -1,12 +1,16 @@
-displayName: Demo Plugin
+displayName: Form Data
 type: middleware
 iconPath: .assets/icon.png
 
-import: github.com/traefik/plugindemo
+import: github.com/zalbiraw/formdata
 
-summary: '[Demo] Add Request Header'
+summary: 'Modify Reuqest Form Data'
 
 testData:
-  Headers:
-    X-Demo: test
-    X-URL: '{{URL}}'
+  set:
+    key: value
+  append:
+    key: value
+  delete:
+    - foo
+    - bar
